@@ -1,6 +1,8 @@
-﻿using MySql.Data.MySqlClient;
+using MySql.Data.MySqlClient;
 using System;
 using System.Windows.Forms;
+using BCrypt.Net;
+using GestionQuestionnaires.Modèles;
 
 namespace GestionQuestionnaires
 {
@@ -63,48 +65,56 @@ namespace GestionQuestionnaires
         {
             try
             {
-                var DBCon = new GQConnexion
+                GQConnexion DBCon = new GQConnexion
                 {
-                    Server = "localhost",  
-                    DatabaseName = "gestionquestionnaire", 
-                    UserName = "root",  
-                    Password = Crypto.Decrypt("xHhoy9Gmtj6SXFZCpaR+0g==") 
+                    Server = "localhost",
+                    DatabaseName = "gestionquestionnaire",
+                    UserName = "root",
+                    Password = Crypto.Decrypt("xHhoy9Gmtj6SXFZCpaR+0g==")
                 };
 
-                // Vérifier si la connexion à la base de données est réussie
                 if (DBCon.IsConnect())
                 {
-                    string query = "SELECT COUNT(*) FROM utilisateurs WHERE nomUtilisateur = @nomUtilisateur AND motDePasse = @motDePasse";
+                    string query = "SELECT id, nomUtilisateur, nom, prenom, motDePasse FROM utilisateurs WHERE nomUtilisateur = @nomUtilisateur";
                     using (var cmd = new MySqlCommand(query, DBCon.Connection))
                     {
                         cmd.Parameters.AddWithValue("@nomUtilisateur", nomUtilisateur);
-                        cmd.Parameters.AddWithValue("@motDePasse", motDePasse);
 
-                        object result = cmd.ExecuteScalar();
-                        if (result != null)
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            int count = Convert.ToInt32(result);
-                            return count > 0;
-                        }
-                        else
-                        {
-                            MessageBox.Show("Aucun utilisateur trouvé.");
-                            return false;
-                        }
+                            if (reader.Read())
+                            {
+                                string motDePasseHash = reader.GetString("motDePasse");
 
+                                // Vérifie le mot de passe avec le hash
+                                if (BCrypt.Net.BCrypt.Verify(motDePasse, motDePasseHash))
+                                {
+                                    // Stocker les infos utilisateur si besoin
+                                    Utilitaires.UtilisateurConnecte.Id = reader.GetInt32("id");
+                                    Utilitaires.UtilisateurConnecte.NomUtilisateur = reader.GetString("nomUtilisateur");
+                                    Utilitaires.UtilisateurConnecte.Nom = reader.GetString("nom");
+                                    Utilitaires.UtilisateurConnecte.Prenom = reader.GetString("prenom");
+
+                                    return true;
+                                }
+                            }
+                        }
                     }
-                }
-                else
-                {
-                    MessageBox.Show("Erreur : Impossible de se connecter à la base de données.");
-                    return false;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur de connexion : {ex.Message}");
-                return false;
+                MessageBox.Show($"Erreur lors de la validation de l'utilisateur : {ex.Message}");
             }
+
+            return false;
+        }
+
+
+
+        private void btnPS_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
