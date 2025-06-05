@@ -12,7 +12,9 @@ namespace GestionQuestionnaires.Modèles
 
         public int ThemeId { get; set; }
 
-       
+        public string ThemeNom { get; set; }
+
+
         public Questionnaire()
         {
             Id = 0;
@@ -27,13 +29,12 @@ namespace GestionQuestionnaires.Modèles
             ThemeId = themeid ;
         }
 
-        public static List<Questionnaire> GetQuestionnaires()
+        public static List<Questionnaire> GetQuestionnairesAvecThemes()
         {
-            var questionnaireListe = new List<Questionnaire>();
+            List<Questionnaire> questionnaires = new List<Questionnaire>();
 
             try
             {
-                // Connexion à la BDD
                 var DBCon = new GQConnexion
                 {
                     Server = "localhost",
@@ -44,30 +45,32 @@ namespace GestionQuestionnaires.Modèles
 
                 if (DBCon.IsConnect())
                 {
-                    string query = "SELECT Id, Libelle, ThemeId FROM questionnaire;";
+                    string query = "SELECT q.Id, q.Libelle, q.ThemeId, t.Nom AS ThemeNom FROM questionnaire q JOIN theme t ON q.ThemeId = t.Id";
+
                     using (var cmd = new MySqlCommand(query, DBCon.Connection))
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            var questionnaire = new Questionnaire
+                            questionnaires.Add(new Questionnaire
                             {
                                 Id = reader.GetInt32("Id"),
                                 Libelle = reader.GetString("Libelle"),
-                                ThemeId = reader.GetInt32("ThemeId")
-                            };
-                            questionnaireListe.Add(questionnaire);
+                                ThemeId = reader.GetInt32("ThemeId"),
+                                ThemeNom = reader.GetString("ThemeNom") // Récupération du nom du thème
+                            });
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des questionnaires : {ex.Message}");
+                MessageBox.Show($"Erreur lors du chargement des questionnaires : {ex.Message}", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
-            return questionnaireListe;
+            return questionnaires;
         }
+
 
         public static bool AjouterQuestionnaire(Questionnaire questionnaire)
         {

@@ -5,26 +5,26 @@ using System.Windows.Forms;
 
 namespace GestionQuestionnaires.Modèles
 {
-    internal class Type
+    internal class Types
     {
         public int id { get; set; }
-        public string nom { get; set; }
+        public string libelle { get; set; }
 
-        public Type()
+        public Types()
         {
             id = 0;
-            nom = string.Empty;
+            libelle = string.Empty;
         }
 
-        public Type(string nom, int id)
+        public Types(string nom, int id)
         {
             this.id = id;
-            this.nom = nom;
+            this.libelle = nom;
         }
 
-        public static List<Type> GetTypes()
+        public static List<Types> GetTypes()
         {
-            var typeListe = new List<Type>();
+            var typeListe = new List<Types>();
 
             try
             {
@@ -33,21 +33,21 @@ namespace GestionQuestionnaires.Modèles
                     Server = "localhost",
                     DatabaseName = "gestionquestionnaire",
                     UserName = "root",
-                    Password = Crypto.Decrypt("xHhoy9Gmtj6SXFZCpaR+0g==") 
+                    Password = Crypto.Decrypt("xHhoy9Gmtj6SXFZCpaR+0g==")
                 };
 
                 if (DBCon.IsConnect())
                 {
-                    string query = "SELECT Id, Nom FROM type;";
+                    string query = "SELECT Id, Libelle FROM type;";
                     using (var cmd = new MySqlCommand(query, DBCon.Connection))
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            var type = new Type
+                            var type = new Types
                             {
                                 id = reader.GetInt32("Id"),
-                                nom = reader.GetString("Nom")
+                                libelle = reader.GetString("Libelle")
                             };
                             typeListe.Add(type);
                         }
@@ -61,5 +61,7 @@ namespace GestionQuestionnaires.Modèles
 
             return typeListe;
         }
+
+
     }
 }
