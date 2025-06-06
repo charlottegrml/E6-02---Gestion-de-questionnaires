@@ -1,18 +1,26 @@
 using GestionQuestionnaires.Contrôleurs;
 using GestionQuestionnaires.Modèles;
+using MySql.Data.MySqlClient;
 using MySqlX.XDevAPI.Relational;
 using Org.BouncyCastle.Tls;
 using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using PdfSharp;
+using PdfSharp.Drawing;
+using PdfSharp.Fonts;
+using PdfSharp.Pdf;
+using PdfSharp.Quality;
+using PdfSharp.Snippets.Font;
+using System.Diagnostics;
 
 namespace GestionQuestionnaires
 {
     public partial class GQuestionnaire : Form
     {
         private BindingList<Questionnaire> questionnaireListe = new BindingList<Questionnaire>();
-        private BindingList<Thème> themeListe = new BindingList<Thème>();
+        private BindingList<Theme> themeListe = new BindingList<Theme>();
 
         public GQuestionnaire()
         {
@@ -27,30 +35,23 @@ namespace GestionQuestionnaires
             {
                 // Effacer les anciennes données
                 questionnaireListe.Clear();
-                questionnaireListe = new BindingList<Questionnaire>(Modèles.Questionnaire.GetQuestionnaires());
+                questionnaireListe = new BindingList<Questionnaire>(Modèles.Questionnaire.GetQuestionnairesAvecThemes());
 
                 themeListe.Clear();
-                themeListe = new BindingList<Thème>(Modèles.Thème.GetThemes());
-                if (DGV1.SelectedCells.Count > 0)
-                {
-                    int selectedRowIndex = DGV1.SelectedCells[0].RowIndex;
-                    DataGridViewRow selectedRow = DGV1.Rows[selectedRowIndex];
-                    //Questionnaire selectedQuestionnaire = (Questionnaire)Row.DataBoundItem;
-                }
+                themeListe = new BindingList<Theme>(Modèles.Theme.GetThemes());
+
+                // Sélectionner la ligne entière dans la DataGridView
                 DGV1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
                 DGV1.MultiSelect = false;
-
 
                 // Affecter la source des données à la DataGridView
                 AffecterDonnees();
 
-
                 // Ajouter la colonne "Thème"
-                AfficherColonneTheme();
-
+                //AfficherColonneTheme();
 
                 // Ajouter la colonne "NbQuestions"
-                AffihcherColonneNBQuestion();
+                AfficherColonneNBQuestion();
 
                 DGV1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
 
@@ -59,9 +60,12 @@ namespace GestionQuestionnaires
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des données : {ex.Message}");
+                MessageBox.Show($"Erreur lors du chargement des données : {ex.Message}", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+
+
 
         // Gestion des clics de souris sur les cellules de la DataGridView
         private void DGV1_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
@@ -95,6 +99,7 @@ namespace GestionQuestionnaires
             {
                 case string modifier when modifier.StartsWith("Éditer"):
                     EditerQuestionnaire(questionnaireId);
+                    this.Close();
                     break;
                 case string supprimer when supprimer.StartsWith("Supprimer"):
                     SupprimerQuestionnaire(questionnaireId);
@@ -107,15 +112,17 @@ namespace GestionQuestionnaires
 
         public void ajouterQuestionnaire(int id)
         {
-            var ajouterForm = new AjouterQuestionnaireForm(id);
+            var ajouterForm = new AjouterQuestionnaireForm();
             ajouterForm.ShowDialog();
+            this.Close();
         }
 
         private void EditerQuestionnaire(int id)
         {
-            var ModifierForm = new EditerQuestionnaireForm(id); // Passer l'id pour éditer le bon questionnaire
+            var ModifierForm = new EditerQuestionnaireForm(id, this); // Passer l'id pour éditer le bon questionnaire
             ModifierForm.ShowDialog();
-            RafraichirDataGrid();
+            //this.Close();
+            //RafraichirDataGrid();
         }
 
         private void SupprimerQuestionnaire(int id)
@@ -125,6 +132,9 @@ namespace GestionQuestionnaires
             {
                 QuestionnaireController.SupprimerQuestionnaire(id);
                 chargerLesDonnes(null, null);
+                this.Hide();
+                GQuestionnaire mainForm = new GQuestionnaire();
+                mainForm.Show();
             }
         }
 
@@ -134,10 +144,10 @@ namespace GestionQuestionnaires
 
             DGV1.DataSource = null;
             questionnaireListe.Clear();
-            questionnaireListe = new BindingList<Questionnaire>(Modèles.Questionnaire.GetQuestionnaires());
+            questionnaireListe = new BindingList<Questionnaire>(Modèles.Questionnaire.GetQuestionnairesAvecThemes());
 
             themeListe.Clear();
-            themeListe = new BindingList<Thème>(Modèles.Thème.GetThemes());
+            themeListe = new BindingList<Theme>(Modèles.Theme.GetThemes());
             if (DGV1.SelectedCells.Count > 0)
             {
                 int selectedRowIndex = DGV1.SelectedCells[0].RowIndex;
@@ -149,17 +159,22 @@ namespace GestionQuestionnaires
 
 
             AffecterDonnees();
-            AfficherColonneTheme();
-            AffihcherColonneNBQuestion();
+            //AfficherColonneTheme();
+            AfficherColonneNBQuestion();
             OrdreColonnes();
 
             DGV1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
 
-           RemplirThemeetNBQuestion();
+            RemplirThemeetNBQuestion();
 
             OrdreColonnes();
         }
 
+
+        //private void btnExporterPDF_Click(object sender, EventArgs e)
+        //{
+        //    ExporterQuestionnaireEnPDF();
+        //}
 
 
         public void AffecterDonnees()
@@ -168,22 +183,24 @@ namespace GestionQuestionnaires
             DGV1.Columns["libelle"].HeaderText = "Nom du questionnaire";
             DGV1.Columns["id"].Visible = false;
             DGV1.Columns["ThemeId"].Visible = false;
+            DGV1.Columns["ThemeNom"].HeaderText = "Thème du questionnaire";
+
         }
 
-        public void AfficherColonneTheme()
-        {
-            if (!DGV1.Columns.Contains("Thème"))
-            {
-                DataGridViewTextBoxColumn themeColumn = new DataGridViewTextBoxColumn
-                {
-                    Name = "Thème",
-                    HeaderText = "Thème du questionnaire"
-                };
-                DGV1.Columns.Add(themeColumn);
-            }
-        }
+        //public void AfficherColonneTheme()
+        //{
+        //    if (!DGV1.Columns.Contains("Thème"))
+        //    {
+        //        DataGridViewTextBoxColumn themeColumn = new DataGridViewTextBoxColumn
+        //        {
+        //            Name = "Thème",
+        //            HeaderText = "Thème du questionnaire"
+        //        };
+        //        DGV1.Columns.Add(themeColumn);
+        //    }
+        //}
 
-        public void AffihcherColonneNBQuestion()
+        public void AfficherColonneNBQuestion()
         {
             if (!DGV1.Columns.Contains("NbQuestions"))
             {
@@ -206,8 +223,10 @@ namespace GestionQuestionnaires
                 int questionnaireId = (int)row.Cells["id"].Value;
 
                 // Associer un thème au questionnaire
-                var theme = themeListe.FirstOrDefault(t => t.id == questionnaireId);
-                row.Cells["Thème"].Value = theme?.nom;
+                int themeId = (int)row.Cells["ThemeId"].Value;
+                var theme = themeListe.FirstOrDefault(t => t.id == themeId);
+                row.Cells["ThemeNom"].Value = theme?.nom;
+
 
                 // Récupérer le nombre de questions
                 var questions = QuestionController.ToutesLesQuestions(questionnaireId);
@@ -222,6 +241,9 @@ namespace GestionQuestionnaires
             DGV1.Columns["ThemeId"].DisplayIndex = 1;
             DGV1.Columns["NbQuestions"].DisplayIndex = 2;
         }
+
+        
+
 
     }
 }

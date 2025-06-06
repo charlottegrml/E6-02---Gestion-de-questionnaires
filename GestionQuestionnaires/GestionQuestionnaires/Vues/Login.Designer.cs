@@ -42,6 +42,7 @@
             // 
             label1.AutoSize = true;
             label1.Font = new Font("Tahoma", 30F, FontStyle.Regular, GraphicsUnit.Point);
+            label1.ForeColor = SystemColors.ButtonHighlight;
             label1.Location = new Point(235, 9);
             label1.Name = "label1";
             label1.Size = new Size(361, 72);
@@ -52,6 +53,7 @@
             // 
             labelUsername.AutoSize = true;
             labelUsername.Font = new Font("Tahoma", 16F, FontStyle.Regular, GraphicsUnit.Point);
+            labelUsername.ForeColor = SystemColors.ButtonHighlight;
             labelUsername.Location = new Point(40, 119);
             labelUsername.Name = "labelUsername";
             labelUsername.Size = new Size(277, 39);
@@ -62,6 +64,7 @@
             // 
             labelPassword.AutoSize = true;
             labelPassword.Font = new Font("Tahoma", 16F, FontStyle.Regular, GraphicsUnit.Point);
+            labelPassword.ForeColor = SystemColors.ButtonHighlight;
             labelPassword.Location = new Point(91, 167);
             labelPassword.Name = "labelPassword";
             labelPassword.Size = new Size(226, 39);
@@ -109,6 +112,7 @@
             // btnConnexion
             // 
             btnConnexion.Font = new Font("Tahoma", 16F, FontStyle.Regular, GraphicsUnit.Point);
+            btnConnexion.ForeColor = SystemColors.ActiveCaptionText;
             btnConnexion.Location = new Point(277, 272);
             btnConnexion.Name = "btnConnexion";
             btnConnexion.Size = new Size(275, 57);
@@ -121,6 +125,7 @@
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
+            BackColor = SystemColors.ActiveCaptionText;
             ClientSize = new Size(800, 450);
             Controls.Add(btnConnexion);
             Controls.Add(star1);
@@ -130,6 +135,7 @@
             Controls.Add(labelPassword);
             Controls.Add(labelUsername);
             Controls.Add(label1);
+            ForeColor = SystemColors.ButtonHighlight;
             Name = "Login";
             Text = "Form1";
             ResumeLayout(false);

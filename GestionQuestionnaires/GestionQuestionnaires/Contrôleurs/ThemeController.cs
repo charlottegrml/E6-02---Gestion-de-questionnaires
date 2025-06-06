@@ -18,14 +18,12 @@ namespace GestionQuestionnaires.Contrôleurs
         //}
 
 
-
-
-        public static void RemplirComboBox (ComboBox comboBox)
+        public static void RemplirComboBox(ComboBox comboBox)
         {
 
             try
             {
-                List<Thème> themelist = Thème.GetThemes();
+                List<Theme> themelist = Theme.GetThemes();
                 GQConnexion DBCon = new GQConnexion
                 {
                     Server = "localhost",
@@ -43,7 +41,7 @@ namespace GestionQuestionnaires.Contrôleurs
                         themelist.Clear();
                         while (reader.Read())
                         {
-                            themelist.Add (new Thème
+                            themelist.Add(new Theme
                             {
                                 id = reader.GetInt32("Id"),
                                 nom = reader.GetString("Nom")
@@ -51,7 +49,7 @@ namespace GestionQuestionnaires.Contrôleurs
                         }
                     }
                 }
-                comboBox.Items.Clear(); 
+                comboBox.Items.Clear();
                 comboBox.DataSource = themelist;
                 comboBox.DisplayMember = "Nom";
                 comboBox.ValueMember = "Id";
@@ -64,11 +62,8 @@ namespace GestionQuestionnaires.Contrôleurs
         }
 
 
-        public static void SelectionnerLigneComboBox(ComboBox comboBox, int id)
+        public static void RemplirComboBoxAvecBonTheme(ComboBox comboBox, int idTheme)
         {
-            comboBox.SelectedValue = id;
-
-
             try
             {
                 GQConnexion DBCon = new GQConnexion
@@ -81,35 +76,39 @@ namespace GestionQuestionnaires.Contrôleurs
 
                 if (DBCon.IsConnect())
                 {
-                    string query = "UPDATE Id, Nom FROM theme;";
+                    List<Theme> themes = new List<Theme>();
+
+                    string query = "SELECT Id, Nom FROM theme ORDER BY Nom;";
                     using (var cmd = new MySqlCommand(query, DBCon.Connection))
                     using (var reader = cmd.ExecuteReader())
                     {
-                        //themelist.Clear();
                         while (reader.Read())
                         {
-                            //themelist.Add(new Thème
-                            //{
-                            //    id = reader.GetInt32("Id"),
-                            //    nom = reader.GetString("Nom")
-                            //});
+                            Theme t = new Theme
+                            {
+                                id = reader.GetInt32("Id"),
+                                nom = reader.GetString("Nom")
+                            };
+                            themes.Add(t);
                         }
                     }
+
+                    comboBox.DataSource = themes;
+                    comboBox.DisplayMember = "Nom";
+                    comboBox.ValueMember = "Id";
+
+                    // Sélectionner le bon thème après avoir défini la source
+                    comboBox.SelectedValue = idTheme;
                 }
-
-
             }
-
-            catch
+            catch (Exception ex)
             {
-
+                MessageBox.Show($"Erreur lors de la sélection des thèmes : {ex.Message}");
             }
         }
 
-        //public static void EnregistrerTheme(ComboBox comboBox, int id)
-        //{
 
-        //}
+
     }
 }
 

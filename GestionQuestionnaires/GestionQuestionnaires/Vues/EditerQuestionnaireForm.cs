@@ -1,5 +1,6 @@
 ﻿using GestionQuestionnaires.Contrôleurs;
 using GestionQuestionnaires.Modèles;
+using GestionQuestionnaires.Vues;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -18,23 +19,24 @@ namespace GestionQuestionnaires
         Questionnaire Monquestionnaire = new Questionnaire();
         Question MesQuestions = new Question();
         private int questionnaireId;
-        private BindingList<Thème> themeListe = new BindingList<Thème>();
+        private BindingList<Theme> themeListe = new BindingList<Theme>();
 
 
-        public EditerQuestionnaireForm(int id)
+        private GQuestionnaire parentForm;
+
+        public EditerQuestionnaireForm(int id, GQuestionnaire parent)
         {
             InitializeComponent();
             questionnaireId = id;
+            parentForm = parent;
             chargerMonQuestionnaire(questionnaireId);
-            //AfficherThemes();
         }
+        //private void EditerQuestionnaireForm_Load(object sender, EventArgs e)
+        //{
+        //    chargerMonQuestionnaire(questionnaireId);
 
-        private void EditerQuestionnaireForm_Load(object sender, EventArgs e)
-        {
-            chargerMonQuestionnaire(questionnaireId);
-
-            //ChargerLesDonnees();
-        }
+        //    //ChargerLesDonnees();
+        //}
 
         // Méthode pour charger les données du questionnaire
 
@@ -70,6 +72,7 @@ namespace GestionQuestionnaires
                             {
                                 MessageBox.Show("problème avec chargerMonQuestionnaire");
                             }
+
                         }
                     }
                 }
@@ -79,17 +82,23 @@ namespace GestionQuestionnaires
                 MessageBox.Show($"Erreur lors de la récupération du questionnaire : {ex.Message}");
             }
 
-            ThemeController.RemplirComboBox(cbBoxTheme);
-            ThemeController.SelectionnerLigneComboBox(cbBoxTheme, id);
-            QuestionController.RemplirDGVavecQuestions(DGVQuestion, questionnaireId);
 
+            ThemeController.RemplirComboBoxAvecBonTheme(cbBoxTheme, Monquestionnaire.ThemeId);
+            QuestionController.RemplirDGVavecQuestions(DGVQuestion, questionnaireId);
 
 
         }
 
-        public void SauvegarderQuestionnaire()
-        {
+        //public void SauvegarderQuestionnaire()
+        //{
 
+        //}
+
+
+        public void RechargerQuestionnaire(int questionnaireId)
+        {
+            //questionnaireId = QuestionController.RetournerQuestionnaireIdByQuestion();
+            chargerMonQuestionnaire(questionnaireId);
         }
 
 
@@ -99,7 +108,6 @@ namespace GestionQuestionnaires
 
         private void DGVQuestion_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
-            // Gestion des clics de souris sur les cellules de la DataGridView
             if (e.Button == MouseButtons.Right)
             {
                 if (e.ColumnIndex == 1 && e.RowIndex >= 0)
@@ -121,12 +129,14 @@ namespace GestionQuestionnaires
 
         }
 
-        private void btnAnnuler_Click_1(object sender, EventArgs e)
+        private void btnAnnuler_Click(object sender, EventArgs e)
         {
-            this.Close();
+            this.Hide();
+            GQuestionnaire mainForm = new GQuestionnaire();
+            mainForm.Show();
         }
 
-        private void btnSauvegarder_Click_1(object sender, EventArgs e)
+        private void btnSauvegarder_Click(object sender, EventArgs e)
         {
             try
             {
@@ -140,20 +150,13 @@ namespace GestionQuestionnaires
                     return;
                 }
 
-                // Mettre à jour les données dans la base de données
-                var questionnaire = new Modèles.Questionnaire
-                {
-                    //id = questionnaireId,
-                    //libelle = nomQuestionnaire,
-                    // themeId = themeId
-                };
-
-                // QuestionnaireController.ModifierQuestionnaire(questionnaire);
+                QuestionnaireController.ModifierQuestionnaire(questionnaireId, nomQuestionnaire, themeId);
 
                 // Confirmer la mise à jour
                 MessageBox.Show("Le questionnaire a été modifié avec succès.");
-                //GQuestionnaire.RafraichirDataGrid();
-                this.Close();
+                this.Hide();
+                GQuestionnaire mainForm = new GQuestionnaire();
+                mainForm.Show();
             }
             catch (Exception ex)
             {
@@ -161,7 +164,62 @@ namespace GestionQuestionnaires
             }
 
         }
+
+        private void cmsQuestion_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+            DataGridViewRow Ligne = DGVQuestion.SelectedRows[0];
+
+            int questionId = (int)Ligne.Cells[0].Value;
+            switch (e.ClickedItem.Text)
+            {
+                case string modifier when modifier.StartsWith("Éditer"):
+                    EditerUneQuestion(questionId);
+                    this.Close();
+                    break;
+                case string supprimer when supprimer.StartsWith("Supprimer"):
+                    SupprimerQuestion(questionId);
+                    break;
+                case string ajouter when ajouter.StartsWith("Ajouter"):
+                    ajouterQuestion(questionId);
+                
+                    break;
+            }
+        }
+
+        public void ajouterQuestion(int id)
+        {
+            int idQuestionnaire = Monquestionnaire.Id;
+            AjouterQuestion formQuestion = new AjouterQuestion(idQuestionnaire);
+            formQuestion.Show();
+        }
+
+        private void EditerUneQuestion(int id)
+        {
+            var editerForm = new EditerQuestion(id, this);
+            editerForm.ShowDialog(); 
+            RechargerQuestionnaire(id);
+        }
+
+        private void SupprimerQuestion(int id)
+        {
+            var result = MessageBox.Show("Êtes-vous sûr de vouloir supprimer cette question ?", "Confirmation", MessageBoxButtons.YesNo);
+            if (result == DialogResult.Yes)
+            {
+                QuestionController.SupprimerQuestion(id);
+                chargerMonQuestionnaire(questionnaireId);
+                this.Hide();
+                EditerQuestionnaireForm mainForm = new EditerQuestionnaireForm(questionnaireId, parentForm);
+                mainForm.Show();
+            }
+        }
     }
 
+
+
+
+
+
 }
+
+
 

@@ -72,101 +72,104 @@ namespace GestionQuestionnaires.Modèles
             return questions;
         }
 
-        public static bool AjouterQuestion(Question question, int questionnaireId)
-        {
-            try
-            {
-                var DBCon = new GQConnexion
-                {
-                    Server = "localhost",
-                    DatabaseName = "gestionquestionnaire",
-                    UserName = "root",
-                    Password = Crypto.Decrypt("xHhoy9Gmtj6SXFZCpaR+0g==")
-                };
 
-                if (DBCon.IsConnect())
-                {
-                    string query = "INSERT INTO question (Libelle, TypeDeReponse, QuestionnaireId) VALUES (@Libelle, @TypeDeReponse, @QuestionnaireId);";
-                    using (var cmd = new MySqlCommand(query, DBCon.Connection))
-                    {
-                        cmd.Parameters.AddWithValue("@Libelle", question.Libelle);
-                        cmd.Parameters.AddWithValue("@TypeId", question.TypeId);
-                        cmd.Parameters.AddWithValue("@QuestionnaireId", questionnaireId);
-                        cmd.ExecuteNonQuery();
-                    }
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erreur lors de l'ajout de la question : {ex.Message}");
-            }
 
-            return false;
-        }
 
-        public static bool ModifierQuestion(Question question)
-        {
-            try
-            {
-                var DBCon = new GQConnexion
-                {
-                    Server = "localhost",
-                    DatabaseName = "gestionquestionnaire",
-                    UserName = "root",
-                    Password = Crypto.Decrypt("xHhoy9Gmtj6SXFZCpaR+0g==")
-                };
+        //    public static bool AjouterQuestion(Question question, int questionnaireId)
+        //    {
+        //        try
+        //        {
+        //            var DBCon = new GQConnexion
+        //            {
+        //                Server = "localhost",
+        //                DatabaseName = "gestionquestionnaire",
+        //                UserName = "root",
+        //                Password = Crypto.Decrypt("xHhoy9Gmtj6SXFZCpaR+0g==")
+        //            };
 
-                if (DBCon.IsConnect())
-                {
-                    string query = "UPDATE question SET Libelle = @Libelle, TypeDeReponse = @TypeDeReponse WHERE Id = @Id;";
-                    using (var cmd = new MySqlCommand(query, DBCon.Connection))
-                    {
-                        cmd.Parameters.AddWithValue("@Libelle", question.Libelle);
-                        cmd.Parameters.AddWithValue("@TypeDeReponse", question.TypeId);
-                        cmd.Parameters.AddWithValue("@Id", question.Id);
-                        cmd.ExecuteNonQuery();
-                    }
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erreur lors de la modification de la question : {ex.Message}");
-            }
+        //            if (DBCon.IsConnect())
+        //            {
+        //                string query = "INSERT INTO question (Libelle, TypeDeReponse, QuestionnaireId) VALUES (@Libelle, @TypeDeReponse, @QuestionnaireId);";
+        //                using (var cmd = new MySqlCommand(query, DBCon.Connection))
+        //                {
+        //                    cmd.Parameters.AddWithValue("@Libelle", question.Libelle);
+        //                    cmd.Parameters.AddWithValue("@TypeId", question.TypeId);
+        //                    cmd.Parameters.AddWithValue("@QuestionnaireId", questionnaireId);
+        //                    cmd.ExecuteNonQuery();
+        //                }
+        //                return true;
+        //            }
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            Console.WriteLine($"Erreur lors de l'ajout de la question : {ex.Message}");
+        //        }
 
-            return false;
-        }
+        //        return false;
+        //    }
 
-        public static bool SupprimerQuestion(int id)
-        {
-            try
-            {
-                var DBCon = new GQConnexion
-                {
-                    Server = "localhost",
-                    DatabaseName = "gestionquestionnaire",
-                    UserName = "root",
-                    Password = Crypto.Decrypt("xHhoy9Gmtj6SXFZCpaR+0g==")
-                };
+        //    public static bool ModifierQuestion(Question question)
+        //    {
+        //        try
+        //        {
+        //            var DBCon = new GQConnexion
+        //            {
+        //                Server = "localhost",
+        //                DatabaseName = "gestionquestionnaire",
+        //                UserName = "root",
+        //                Password = Crypto.Decrypt("xHhoy9Gmtj6SXFZCpaR+0g==")
+        //            };
 
-                if (DBCon.IsConnect())
-                {
-                    string query = "DELETE FROM question WHERE Id = @Id;";
-                    using (var cmd = new MySqlCommand(query, DBCon.Connection))
-                    {
-                        cmd.Parameters.AddWithValue("@Id", id);
-                        cmd.ExecuteNonQuery();
-                    }
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erreur lors de la suppression de la question : {ex.Message}");
-            }
+        //            if (DBCon.IsConnect())
+        //            {
+        //                string query = "UPDATE question SET Libelle = @Libelle, TypeDeReponse = @TypeDeReponse WHERE Id = @Id;";
+        //                using (var cmd = new MySqlCommand(query, DBCon.Connection))
+        //                {
+        //                    cmd.Parameters.AddWithValue("@Libelle", question.Libelle);
+        //                    cmd.Parameters.AddWithValue("@TypeDeReponse", question.TypeId);
+        //                    cmd.Parameters.AddWithValue("@Id", question.Id);
+        //                    cmd.ExecuteNonQuery();
+        //                }
+        //                return true;
+        //            }
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            Console.WriteLine($"Erreur lors de la modification de la question : {ex.Message}");
+        //        }
 
-            return false;
-        }
+        //        return false;
+        //    }
+
+        //    public static bool SupprimerQuestion(int id)
+        //    {
+        //        try
+        //        {
+        //            var DBCon = new GQConnexion
+        //            {
+        //                Server = "localhost",
+        //                DatabaseName = "gestionquestionnaire",
+        //                UserName = "root",
+        //                Password = Crypto.Decrypt("xHhoy9Gmtj6SXFZCpaR+0g==")
+        //            };
+
+        //            if (DBCon.IsConnect())
+        //            {
+        //                string query = "DELETE FROM question WHERE Id = @Id;";
+        //                using (var cmd = new MySqlCommand(query, DBCon.Connection))
+        //                {
+        //                    cmd.Parameters.AddWithValue("@Id", id);
+        //                    cmd.ExecuteNonQuery();
+        //                }
+        //                return true;
+        //            }
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            Console.WriteLine($"Erreur lors de la suppression de la question : {ex.Message}");
+        //        }
+
+        //        return false;
+        //    }
     }
 }

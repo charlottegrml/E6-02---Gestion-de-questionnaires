@@ -1,5 +1,7 @@
 ﻿using GestionQuestionnaires.Contrôleurs;
 using GestionQuestionnaires.Modèles;
+using GestionQuestionnaires.Utilitaires;
+using GestionQuestionnaires.Vues;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -15,20 +17,10 @@ namespace GestionQuestionnaires
 {
     public partial class AjouterQuestionnaireForm : Form
     {
-        Questionnaire NouveauQuestionnaire = new Questionnaire();
-        Question NouvelleQuestion = new Question();
-        private BindingList<Question> listeQuestions = new BindingList<Question>();
-        public AjouterQuestionnaireForm(int id)
+        public AjouterQuestionnaireForm()
         {
             InitializeComponent();
             ChargerThemes();
-        }
-
-        private void InitialiserDataGridView()
-        {
-            DGVQuestion.DataSource = listeQuestions;
-            DGVQuestion.Columns["Id"].Visible = false;
-            DGVQuestion.Columns["Libelle"].HeaderText = "Question";
         }
 
         private void ChargerThemes()
@@ -38,22 +30,25 @@ namespace GestionQuestionnaires
 
         private void btnSauvegarder_Click(object sender, EventArgs e)
         {
+            string nomQuestionnaire = txtboxQuestionnaire.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(nomQuestionnaire))
+            {
+                MessageBox.Show("Veuillez saisir un nom pour le questionnaire.");
+                return;
+            }
+
+            if (cbBoxTheme.SelectedItem == null)
+            {
+                MessageBox.Show("Veuillez sélectionner un thème.");
+                return;
+            }
+
+            int themeId = (int)cbBoxTheme.SelectedValue;
 
             try
             {
-                // Récupération des valeurs du formulaire
-                string nomQuestionnaire = txtboxQuestionnaire.Text.Trim();
-                int themeId = (int)cbBoxTheme.SelectedValue;
-
-                // Vérifications
-                if (string.IsNullOrEmpty(nomQuestionnaire))
-                {
-                    MessageBox.Show("Le nom du questionnaire est obligatoire.");
-                    return;
-                }
-
-                // Connexion à la base de données
-                GQConnexion DBCon = new GQConnexion
+                GQConnexion dbCon = new GQConnexion
                 {
                     Server = "localhost",
                     DatabaseName = "gestionquestionnaire",
@@ -61,69 +56,44 @@ namespace GestionQuestionnaires
                     Password = Crypto.Decrypt("xHhoy9Gmtj6SXFZCpaR+0g==")
                 };
 
-                if (DBCon.IsConnect())
+                if (dbCon.IsConnect())
                 {
-                    string query = "INSERT INTO questionnaire (Libelle, ThemeId) VALUES (@Libelle, @ThemeId)";
-                    using (var cmd = new MySqlCommand(query, DBCon.Connection))
+                    int idQuestionnaire;
+
+                    string insertQuery = "INSERT INTO questionnaire (Libelle, ThemeId) VALUES (@Libelle, @ThemeId)";
+                    using (MySqlCommand cmd = new MySqlCommand(insertQuery, dbCon.Connection))
                     {
                         cmd.Parameters.AddWithValue("@Libelle", nomQuestionnaire);
                         cmd.Parameters.AddWithValue("@ThemeId", themeId);
-                        cmd.ExecuteNonQuery(); // Exécute la requête
+                        cmd.ExecuteNonQuery();
+                        idQuestionnaire = (int)cmd.LastInsertedId;
                     }
 
-                    MessageBox.Show("Le questionnaire a été ajouté avec succès.");
-                    this.Close(); // Ferme la fenêtre après ajout
+                    MessageBox.Show("Questionnaire créé avec succès !");
+
+                    // Ouvrir la fenêtre d’ajout de questions
+                    AjouterQuestion formQuestion = new AjouterQuestion(idQuestionnaire);
+                    formQuestion.Show();
+
+                    this.Close();
+
+                }
+                else
+                {
+                    MessageBox.Show("Connexion à la base de données impossible.");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'ajout : {ex.Message}");
+                MessageBox.Show("Erreur : " + ex.Message);
             }
         }
-
-        private void btnAjouterQuestion_Click(object sender, EventArgs e)
-        {
-            string nouvelleQuestion = txtQuestion.Text.Trim();
-
-            if (!string.IsNullOrEmpty(nouvelleQuestion))
-            {
-                listeQuestions.Add(new Question { Libelle = nouvelleQuestion });
-                txtQuestion.Clear();
-            }
-            else
-            {
-                MessageBox.Show("Veuillez entrer une question valide.");
-            }
-        }
-
-        private void cbBoxType_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            string typeSelectionne = cbBoxType.SelectedItem.ToString();
-
-            // Cacher tous les groupes par défaut
-            GBvraiFaux.Visible = false;
-            GBListeValeur.Visible = false;
-            panelQCM.Visible = false;
-
-            // Activer uniquement les contrôles correspondant au type sélectionné
-            if (typeSelectionne == "Vrai/Faux")
-            {
-                GBvraiFaux.Visible = true;
-            }
-            else if (typeSelectionne == "Liste de Valeurs")
-            {
-                GBListeValeur.Visible = true;
-            }
-            else if (typeSelectionne == "QCM")
-            {
-                panelQCM.Visible = true;
-            }
-        }
-
 
         private void btnAnnuler_Click(object sender, EventArgs e)
         {
-            this.Close();
+            this.Hide();
+            GQuestionnaire mainForm = new GQuestionnaire();
+            mainForm.Show();
         }
     }
 }

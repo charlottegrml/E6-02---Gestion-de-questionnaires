@@ -117,7 +117,8 @@
             cmsQuestion.ImageScalingSize = new Size(24, 24);
             cmsQuestion.Items.AddRange(new ToolStripItem[] { toolStripMenuItem1ToolStripMenuItem, toolStripMenuItem2ToolStripMenuItem, toolStripMenuItem3ToolStripMenuItem });
             cmsQuestion.Name = "cmsQuestion";
-            cmsQuestion.Size = new Size(244, 100);
+            cmsQuestion.Size = new Size(244, 133);
+            cmsQuestion.ItemClicked += cmsQuestion_ItemClicked;
             // 
             // toolStripMenuItem1ToolStripMenuItem
             // 
@@ -146,7 +147,7 @@
             btnAnnuler.TabIndex = 7;
             btnAnnuler.Text = "Annuler";
             btnAnnuler.UseVisualStyleBackColor = true;
-            btnAnnuler.Click += btnAnnuler_Click_1;
+            btnAnnuler.Click += btnAnnuler_Click;
             // 
             // btnSauvegarder
             // 
@@ -159,7 +160,7 @@
             btnSauvegarder.TabIndex = 8;
             btnSauvegarder.Text = "Sauvegarder";
             btnSauvegarder.UseVisualStyleBackColor = false;
-            btnSauvegarder.Click += btnSauvegarder_Click_1;
+            btnSauvegarder.Click += btnSauvegarder_Click;
             // 
             // EditerQuestionnaireForm
             // 

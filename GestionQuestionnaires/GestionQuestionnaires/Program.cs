@@ -1,3 +1,11 @@
+using PdfSharp;
+using PdfSharp.Drawing;
+using PdfSharp.Fonts;
+using PdfSharp.Pdf;
+using PdfSharp.Quality;
+using PdfSharp.Snippets.Font;
+using System.Diagnostics;
+
 namespace GestionQuestionnaires
 {
     internal static class Program
@@ -12,7 +20,7 @@ namespace GestionQuestionnaires
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
             //Application.Run(new Login());
-            Application.Run(new GQuestionnaire());
+            Application.Run(new Login());
         }
     }
 }
